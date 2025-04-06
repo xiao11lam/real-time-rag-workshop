@@ -166,11 +166,17 @@ def enrich(data, cik_to_tickers):
 enrich_stream = op.filter_map("enrich", deduped_filtered_stream, lambda x: enrich(x, cik_to_ticker))
 
 
-def serialize_k(news)-> KafkaSinkMessage[Dict, Dict]:
-    return KafkaSinkMessage(
-        key=json.dumps(news['symbols'][0]),
-        value=json.dumps(news),
-    )
+def serialize_k(news) -> KafkaSinkMessage[Dict, Dict]:
+    try:
+        ticker, data = news
+        return KafkaSinkMessage(
+            key=json.dumps(ticker),
+            value=json.dumps(data),
+        )
+    except Exception as e:
+        logger.error(f"Serialization failed for news: {news} — {e}")
+        raise e  # or return None and filter out Nones upstream
+
 
 def serialize(news):
     try:
@@ -178,9 +184,14 @@ def serialize(news):
     except:
         return ('All', json.dumps(''))
 
-serialized = op.map("serialize", enrich_stream, serialize)
-op.output("output", serialized, FileSink('sec_out2.jsonl'))
+# serialized = op.map("serialize", enrich_stream, serialize)
+# op.output("output", serialized, FileSink('sec_out2.jsonl'))
 
 ## uncomment to write to kafka
-# serialized = op.map("serialize", enrich_stream, serialize_k)
-# kop.output("out", serialized, brokers=BROKERS, topic=OUT_TOPIC)
+# Define Kafka connection settings
+BROKERS = "localhost:9092"         # or your Kafka broker address
+OUT_TOPIC = "sec_filings"          # or whatever topic name you want
+
+serialized_kafka = op.map("serialize_kafka", enrich_stream, serialize_k)
+kop.output("kafka_out", serialized_kafka, brokers=BROKERS, topic=OUT_TOPIC)
+

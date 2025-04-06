@@ -76,3 +76,22 @@ One method to deploy these pipelines remotely is to use the Bytewax platform, wh
 ```shell
 waxctl aws deploy --help
 ```
+
+
+
+Run kafka:
+```
+python -m bytewax.run sec_filings_ingestion.py
+docker compose down -v
+docker compose up
+```
+
+
+Test if the Kafka is running:
+```
+nc -vz localhost 9092
+lsof -i :9092
+
+docker exec -it kafka bash
+kafka-topics.sh --bootstrap-server kafka:9092 --list
+```
