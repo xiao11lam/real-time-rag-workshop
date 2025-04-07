@@ -95,3 +95,9 @@ lsof -i :9092
 docker exec -it kafka bash
 kafka-topics.sh --bootstrap-server kafka:9092 --list
 ```
+
+
+```
+
+docker run -it -p 8080:8080 -e DYNAMIC_CONFIG_ENABLED=true provectuslabs/kafka-ui
+```
