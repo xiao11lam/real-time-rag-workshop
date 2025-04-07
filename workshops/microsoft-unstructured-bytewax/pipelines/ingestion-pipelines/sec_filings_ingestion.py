@@ -117,7 +117,7 @@ def enrich(data, cik_to_tickers):
     try:
         ticker = cik_to_ticker['ticker'].loc[cik]
         if not isinstance(ticker, str):
-            ticker.iloc[0]
+            ticker = ticker.iloc[0]
     except KeyError:
         logger.warn("no valid ticker, checking form")
         if str(data["form_type"]) in ["5", "3", "4"]:
